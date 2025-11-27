@@ -1,0 +1,56 @@
+# --- System & IDEs ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- Python (Backend) ---
+__pycache__/
+*.py[cod]
+*$py.class
+# Virtual Environments
+venv/
+env/
+.venv/
+# Environment Variables
+.env
+.env.local
+# Test & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Android (Java) ---
+# Build output
+build/
+app/build/
+.gradle/
+# Local configuration
+local.properties
+# IntelliJ/Android Studio files
+*.iml
+*.ipr
+*.iws
+.navigation/
+captures/
+*.hprof
+
+# --- iOS (Swift/Xcode) ---
+# Build generated
+DerivedData/
+build/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+# User specific settings
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcworkspace/xcuserdata/
+.DS_Store
+# CocoaPods
+Pods/
+Podfile.lock
+
+# --- Docker ---
+postgres_data/

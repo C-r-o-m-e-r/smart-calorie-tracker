@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: calorie_tracker_db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=calorie_tracker
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persist data so you don't lose it when turning off Docker
+      - postgres_data:/var/lib/postgresql/data
+      # Automatically run our SQL script to create tables on first start
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  postgres_data:
