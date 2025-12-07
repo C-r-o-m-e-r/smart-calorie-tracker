@@ -1,3 +1,7 @@
+# docker-compose.yml
+# added backend service to the mix so it actually does something
+# linking it to db service
+
 version: '3.8'
 
 services:
@@ -12,10 +16,26 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # Persist data so you don't lose it when turning off Docker
       - postgres_data:/var/lib/postgresql/data
-      # Automatically run our SQL script to create tables on first start
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  backend:
+    build: ./backend
+    container_name: calorie_tracker_backend
+    restart: always
+    # mounting volume for hot reload during dev
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=calorie_tracker
+      - POSTGRES_HOST=db
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
 volumes:
   postgres_data:
