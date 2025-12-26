@@ -1,5 +1,5 @@
 # backend/app/core/config.py
-# loading config from env vars so secrets stay safe
+# adding refresh token settings
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,11 +17,20 @@ class Settings(BaseSettings):
     # AI settings
     OPENAI_API_KEY: str
 
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
+    # Security settings
+    SECRET_KEY: str
+    ALGORITHM: str = "HS256"
+    
+    # Access token is short-lived (e.g., 60 minutes) for security
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 
+    
+    # Refresh token is long-lived (e.g., 30 days) so user stays logged in
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
     @property
     def DATABASE_URL(self) -> str:
-        # making url for asyncpg connection
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
 settings = Settings()

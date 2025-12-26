@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3163F0CC2EFEAE2B000AE609 /* SmartCalorieTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3163F0CB2EFEACE6000AE609 /* SmartCalorieTrackerApp.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		3122FBF22EEAC3FC0071184E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		3122FBE22EEAC3F90071184E /* smart-calorie-tracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "smart-calorie-tracker.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3122FBF12EEAC3FC0071184E /* smart-calorie-trackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "smart-calorie-trackerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3122FBFB2EEAC3FC0071184E /* smart-calorie-trackerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "smart-calorie-trackerUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3163F0CB2EFEACE6000AE609 /* SmartCalorieTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartCalorieTrackerApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +80,7 @@
 		3122FBD92EEAC3F90071184E = {
 			isa = PBXGroup;
 			children = (
+				3163F0CA2EFEACD2000AE609 /* app */,
 				3122FBE42EEAC3F90071184E /* smart-calorie-tracker */,
 				3122FBF42EEAC3FC0071184E /* smart-calorie-trackerTests */,
 				3122FBFE2EEAC3FC0071184E /* smart-calorie-trackerUITests */,
@@ -90,6 +96,14 @@
 				3122FBFB2EEAC3FC0071184E /* smart-calorie-trackerUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		3163F0CA2EFEACD2000AE609 /* app */ = {
+			isa = PBXGroup;
+			children = (
+				3163F0CB2EFEACE6000AE609 /* SmartCalorieTrackerApp.swift */,
+			);
+			path = app;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -236,6 +250,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3163F0CC2EFEAE2B000AE609 /* SmartCalorieTrackerApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

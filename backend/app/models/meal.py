@@ -1,20 +1,26 @@
-# backend/app/models/meal.py
-# mapping meal table here lots of numbers for nutrition
+# backend/app/schemas/meal.py
+# matching the new db structure with floats and singular protein
 
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
-from sqlalchemy.sql import func
-from app.db.base import Base
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional
 
-class Meal(Base):
-    __tablename__ = "meals"
+class MealBase(BaseModel):
+    name: str
+    calories: int
+    protein: float  # <-- Changed from proteins: int
+    fats: float     # <-- Changed to float
+    carbs: float    # <-- Changed to float
+    weight_grams: Optional[float] = None  # <-- Added new field
+    image_url: Optional[str] = None
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    name = Column(String, nullable=False)
-    calories = Column(Integer)
-    protein = Column(Float)
-    fats = Column(Float)
-    carbs = Column(Float)
-    weight_grams = Column(Float)
-    image_url = Column(String)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+class MealCreate(MealBase):
+    pass
+
+class Meal(MealBase):
+    id: int
+    user_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

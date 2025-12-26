@@ -16,9 +16,15 @@ class MealBase(BaseModel):
 class MealCreate(MealBase):
     pass
 
-class MealUpdate(MealBase):
-    pass
-    # just inheriting base since all fields can be updated i guess
+# ОНОВЛЕНО: Всі поля опціональні, щоб можна було змінити, наприклад, тільки вагу
+class MealUpdate(BaseModel):
+    name: Optional[str] = None
+    calories: Optional[int] = None
+    protein: Optional[float] = None
+    fats: Optional[float] = None
+    carbs: Optional[float] = None
+    weight_grams: Optional[float] = None
+    image_url: Optional[str] = None
 
 class Meal(MealBase):
     id: int
@@ -27,4 +33,3 @@ class Meal(MealBase):
 
     class Config:
         from_attributes = True
-        # used to be orm_mode helps converting sqlalchemy objects to json
