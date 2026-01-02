@@ -3,7 +3,7 @@ import SwiftData
 
 @main
 struct SmartCalorieTrackerApp: App {
-    
+
     var body: some Scene {
         WindowGroup {
             RootTabView()
