@@ -7,6 +7,8 @@ struct DashboardView: View {
     // Доступ ко всем записям еды
     @Query(sort: \FoodEntry.date, order: .reverse) private var allEntries: [FoodEntry]
     
+    @Environment(\.modelContext) private var context
+
     @State private var showAddMeal = false
     
     // Вычисляем цель (из профиля или 2000 по умолчанию)
@@ -30,6 +32,10 @@ struct DashboardView: View {
     }
 
     var body: some View {
+        private func deleteEntry(_ entry: FoodEntry) {
+        context.delete(entry)
+        // Изменения сохранятся автоматически благодаря SwiftData
+        }
         NavigationStack {
             ScrollView { // Используем ScrollView для гибкости интерфейса
                 VStack(alignment: .leading, spacing: 24) {
@@ -79,6 +85,15 @@ struct DashboardView: View {
                             .padding()
                             .background(Color(.secondarySystemBackground))
                             .cornerRadius(12)
+                            // ДОБАВЛЯЕМ ЭТО:
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    deleteEntry(entry)
+                                } label: {
+                                    Label("Удалить", systemImage: "trash")
+                                }
+                            }
+                            // Конец добавления
                         }
                     }
                 }

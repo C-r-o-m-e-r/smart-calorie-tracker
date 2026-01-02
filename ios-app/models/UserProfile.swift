@@ -1,3 +1,4 @@
+import Foundation
 import SwiftData
 
 @Model
@@ -10,5 +11,22 @@ final class UserProfile {
         self.weight = weight
         self.height = height
         self.dailyCalories = dailyCalories
+    }
+    
+    // Вычисляем ИМТ: Вес / (Рост в метрах ^ 2)
+    var bmi: Double {
+        guard height > 0 else { return 0 }
+        let heightInMeters = height / 100
+        return weight / (heightInMeters * heightInMeters)
+    }
+    
+    // Текст для отображения статуса
+    var bmiStatus: String {
+        switch bmi {
+        case ..<18.5: return "Недостаточный вес"
+        case 18.5..<25: return "Норма"
+        case 25..<30: return "Избыточный вес"
+        default: return "Ожирение"
+        }
     }
 }
