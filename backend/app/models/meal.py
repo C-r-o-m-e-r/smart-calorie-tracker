@@ -1,26 +1,31 @@
-# backend/app/schemas/meal.py
-# matching the new db structure with floats and singular protein
+# backend/app/models/meal.py
+# sqlalchemy model definition (db schema)
 
-from pydantic import BaseModel
-from datetime import datetime
-from typing import Optional
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+from app.db.base import Base
 
-class MealBase(BaseModel):
-    name: str
-    calories: int
-    protein: float  # <-- Changed from proteins: int
-    fats: float     # <-- Changed to float
-    carbs: float    # <-- Changed to float
-    weight_grams: Optional[float] = None  # <-- Added new field
-    image_url: Optional[str] = None
+class Meal(Base):
+    __tablename__ = "meals"
 
-class MealCreate(MealBase):
-    pass
+    id = Column(Integer, primary_key=True, index=True)
+    # foreign key is required for linking to user
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    
+    name = Column(String, nullable=False)
+    calories = Column(Integer, nullable=False)
+    
+    # using float for macros as requested
+    protein = Column(Float, default=0.0)
+    fats = Column(Float, default=0.0)
+    carbs = Column(Float, default=0.0)
+    
+    weight_grams = Column(Float, nullable=True)
+    image_url = Column(String, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
-class Meal(MealBase):
-    id: int
-    user_id: int
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
+    # relationship back to user
+    # this corresponds to 'meals' in user model
+    owner = relationship("User", back_populates="meals")

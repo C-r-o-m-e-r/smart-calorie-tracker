@@ -1,7 +1,6 @@
 # backend/app/schemas/meal.py
-
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, ConfigDict
+from typing import Optional, List
 from datetime import datetime
 
 class MealBase(BaseModel):
@@ -16,7 +15,6 @@ class MealBase(BaseModel):
 class MealCreate(MealBase):
     pass
 
-# ОНОВЛЕНО: Всі поля опціональні, щоб можна було змінити, наприклад, тільки вагу
 class MealUpdate(BaseModel):
     name: Optional[str] = None
     calories: Optional[int] = None
@@ -31,5 +29,24 @@ class Meal(MealBase):
     user_id: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+# --- NEW: Pagination Wrapper ---
+class MealPagination(BaseModel):
+    items: List[Meal]
+    total: int
+    page: int
+    size: int
+    pages: int
+
+# --- NEW: AI Analysis Response ---
+class FoodAnalysisResponse(BaseModel):
+    name: str
+    calories: int
+    protein: float
+    fats: float
+    carbs: float
+    weight_grams: int
+    is_food: bool
+    image_url: str
+    confidence: Optional[float] = None

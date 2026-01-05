@@ -1,9 +1,8 @@
 # backend/app/api/endpoints/meals.py
-# FINAL VERSION: Uploads, CRUD, Analytics, AI Checks, and Rate Limiting
-
 import shutil
 import os
 import uuid
+import math
 from datetime import date, datetime, timedelta
 from typing import List, Any, Optional
 
@@ -19,7 +18,14 @@ from slowapi.util import get_remote_address
 from app.api import deps
 from app.models.meal import Meal
 from app.models.user import User
-from app.schemas.meal import MealCreate, Meal as MealSchema, MealUpdate
+# added new schemas imports
+from app.schemas.meal import (
+    MealCreate, 
+    Meal as MealSchema, 
+    MealUpdate, 
+    MealPagination, 
+    FoodAnalysisResponse
+)
 from app.services.openai_service import analyze_food_image
 
 router = APIRouter()
@@ -29,6 +35,16 @@ limiter = Limiter(key_func=get_remote_address)
 
 UPLOAD_DIR = "app/static/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# helper to build absolute url
+def get_absolute_url(request: Request, relative_path: str) -> str:
+    if not relative_path:
+        return None
+    # assumes static files are mounted at /static
+    base_url = str(request.base_url).rstrip("/")
+    if relative_path.startswith("/"):
+        return f"{base_url}{relative_path}"
+    return f"{base_url}/{relative_path}"
 
 # --- Feature #14: Daily Summary ---
 @router.get("/summary")
@@ -106,16 +122,16 @@ async def get_weekly_stats(
     return response_data
 
 # --- Feature #17: AI Analysis with Rate Limiting ---
-@router.post("/analyze")
-@limiter.limit("5/minute") # <--- LIMIT: Max 5 photos per minute per IP
+@router.post("/analyze", response_model=FoodAnalysisResponse)
+@limiter.limit("5/minute")
 async def analyze_meal(
-    request: Request, # <--- Required for Limiter
+    request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(deps.get_current_user)
 ):
     """
     Analyze image using OpenAI.
-    Protected by Rate Limiter to save money.
+    Returns structured data + absolute image URL.
     """
     file_extension = file.filename.split(".")[-1]
     filename = f"{uuid.uuid4()}.{file_extension}"
@@ -123,10 +139,13 @@ async def analyze_meal(
     
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-        
-    relative_url = f"/static/uploads/{filename}"
+    
+    # store relative path internally, return absolute to client
+    relative_path = f"/static/uploads/{filename}"
+    absolute_url = get_absolute_url(request, relative_path)
 
     try:
+        # analyze_food_image returns a dict
         analysis_result = await analyze_food_image(file_path)
     except Exception as e:
         if os.path.exists(file_path):
@@ -139,23 +158,33 @@ async def analyze_meal(
             os.remove(file_path)
         raise HTTPException(status_code=500, detail="AI returned empty result")
 
-    # --- Feature #16: Check if it is food ---
+    # check food flag
     is_food = analysis_result.get("is_food", True)
     if is_food is False:
         if os.path.exists(file_path):
             os.remove(file_path)
         raise HTTPException(
             status_code=400, 
-            detail="AI did not detect food in this image. Please try again."
+            detail="AI did not detect food in this image."
         )
-    # ----------------------------------------
 
-    analysis_result["image_url"] = relative_url
-    return analysis_result
+    # prepare response matching FoodAnalysisResponse schema
+    return {
+        "name": analysis_result.get("food_name", "Unknown Food"),
+        "calories": analysis_result.get("calories", 0),
+        "protein": analysis_result.get("protein", 0),
+        "fats": analysis_result.get("fats", 0),
+        "carbs": analysis_result.get("carbs", 0),
+        "weight_grams": analysis_result.get("weight_grams", 0),
+        "is_food": True,
+        "image_url": absolute_url, # return full url
+        "confidence": analysis_result.get("confidence", 1.0)
+    }
 
 
 @router.post("/", response_model=MealSchema)
 async def create_meal(
+    request: Request,
     meal: MealCreate, 
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
@@ -164,29 +193,59 @@ async def create_meal(
     db.add(db_meal)
     await db.commit()
     await db.refresh(db_meal)
+    
+    # inject absolute url into response if image exists
+    if db_meal.image_url:
+        db_meal.image_url = get_absolute_url(request, db_meal.image_url)
+        
     return db_meal
 
-@router.get("/", response_model=List[MealSchema])
+# --- UPDATED: Pagination Support ---
+@router.get("/", response_model=MealPagination)
 async def read_meals(
-    skip: int = 0, 
-    limit: int = 100,
+    request: Request,
+    page: int = 1,
+    size: int = 20,
     filter_date: Optional[date] = None, 
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
-    """Get history with optional date filter."""
-    query = select(Meal).where(Meal.user_id == current_user.id)
+    """Get history with pagination and metadata."""
+    skip = (page - 1) * size
     
+    # build base query
+    query = select(Meal).where(Meal.user_id == current_user.id)
     if filter_date:
         query = query.where(func.date(Meal.created_at) == filter_date)
-        
-    query = query.order_by(Meal.created_at.desc()).offset(skip).limit(limit)
     
+    # get total count for pagination metadata
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total_items = total_result.scalar_one()
+
+    # get data
+    query = query.order_by(Meal.created_at.desc()).offset(skip).limit(size)
     result = await db.execute(query)
-    return result.scalars().all()
+    meals = result.scalars().all()
+    
+    # process urls
+    for m in meals:
+        if m.image_url:
+            m.image_url = get_absolute_url(request, m.image_url)
+
+    total_pages = math.ceil(total_items / size) if size > 0 else 0
+
+    return {
+        "items": meals,
+        "total": total_items,
+        "page": page,
+        "size": size,
+        "pages": total_pages
+    }
 
 @router.put("/{meal_id}", response_model=MealSchema)
 async def update_meal(
+    request: Request,
     meal_id: int,
     meal_in: MealUpdate,
     db: AsyncSession = Depends(deps.get_db),
@@ -205,6 +264,10 @@ async def update_meal(
     db.add(meal)
     await db.commit()
     await db.refresh(meal)
+    
+    if meal.image_url:
+        meal.image_url = get_absolute_url(request, meal.image_url)
+        
     return meal
 
 @router.delete("/{meal_id}")
@@ -218,6 +281,10 @@ async def delete_meal(
     
     if not meal:
         raise HTTPException(status_code=404, detail="Meal not found")
+    
+    # optional: delete file from disk if needed
+    # if meal.image_url:
+    #    ...
         
     await db.delete(meal)
     await db.commit()

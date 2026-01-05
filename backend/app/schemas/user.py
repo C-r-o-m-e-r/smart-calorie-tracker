@@ -1,78 +1,48 @@
 # backend/app/schemas/user.py
-# Updated with profile fields and UserUpdate schema
+# FINAL VERSION: Added NewPassword schema for reset flow
 
-from pydantic import BaseModel, EmailStr, field_validator
-from datetime import datetime
 from typing import Optional
+from pydantic import BaseModel, EmailStr, ConfigDict
 
+# Shared properties
 class UserBase(BaseModel):
-    email: EmailStr
-
-class UserCreate(UserBase):
-    password: str
+    email: Optional[EmailStr] = None
     full_name: Optional[str] = None
-    
-    @field_validator('email')
-    @classmethod
-    def email_must_be_lowercase(cls, v: str) -> str:
-        return v.lower()
-
-    @field_validator('password')
-    @classmethod
-    def password_too_short(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
-        return v
-
-# --- ОНОВЛЕНО: Схема відповіді сервера (Response) ---
-class User(UserBase):
-    id: int
-    full_name: Optional[str] = None
-    
-    # Profile stats (те, що ми додали в SQL)
     age: Optional[int] = None
     weight: Optional[float] = None
     height: Optional[float] = None
-    gender: Optional[str] = None
-    activity_level: Optional[str] = None
-    calories_goal: int # Це поле завжди має дефолт 2000
-    
-    created_at: datetime
+    gender: Optional[str] = None        # 'male', 'female'
+    activity_level: Optional[str] = None # 'sedentary', 'light', 'active'
 
-    class Config:
-        from_attributes = True
+# Properties to receive via API on creation
+class UserCreate(UserBase):
+    email: EmailStr
+    password: str
 
-# --- НОВЕ: Схема для редагування профілю (PATCH) ---
+# Properties to receive via API on update
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     email: Optional[EmailStr] = None
     age: Optional[int] = None
     weight: Optional[float] = None
     height: Optional[float] = None
-    gender: Optional[str] = None         # 'male', 'female'
-    activity_level: Optional[str] = None # 'sedentary', 'active', etc.
-    calories_goal: Optional[int] = None  # Якщо юзер хоче вручну задати ціль
+    gender: Optional[str] = None
+    activity_level: Optional[str] = None
+    calories_goal: Optional[int] = None # Allow manual override if needed
 
-# Used for resetting password via email token
-class NewPassword(BaseModel):
-    token: str
-    new_password: str
-    
-    @field_validator('new_password')
-    @classmethod
-    def password_too_short(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
-        return v
-
-# Used for changing password while logged in
 class UserUpdatePassword(BaseModel):
     current_password: str
     new_password: str
 
-    @field_validator('new_password')
-    @classmethod
-    def password_too_short(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
-        return v
+# --- NEW SCHEMA (Added to fix ImportError) ---
+class NewPassword(BaseModel):
+    token: str
+    new_password: str
+# ---------------------------------------------
+
+# Properties to return to client
+class User(UserBase):
+    id: int
+    calories_goal: Optional[int] = 2000
+    
+    model_config = ConfigDict(from_attributes=True)
