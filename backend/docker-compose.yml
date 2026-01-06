@@ -1,6 +1,4 @@
 # docker-compose.yml
-# added backend service to the mix so it actually does something
-# linking it to db service
 
 version: '3.8'
 
@@ -20,12 +18,11 @@ services:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   backend:
-    build: ./backend
+    build: .
     container_name: calorie_tracker_backend
     restart: always
-    # mounting volume for hot reload during dev
     volumes:
-      - ./backend:/app
+      - .:/app
     ports:
       - "8000:8000"
     depends_on:
@@ -34,8 +31,12 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=calorie_tracker
+      
       - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
 
 volumes:
   postgres_data:
