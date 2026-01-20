@@ -11,14 +11,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
 
-# --- Rate Limiting Imports ---
+# rate limiting imports
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.api import deps
 from app.models.meal import Meal
 from app.models.user import User
-# added new schemas imports
 from app.schemas.meal import (
     MealCreate, 
     Meal as MealSchema, 
@@ -30,7 +29,7 @@ from app.services.openai_service import analyze_food_image
 
 router = APIRouter()
 
-# Setup Limiter (Local instance for this router)
+# setup limiter
 limiter = Limiter(key_func=get_remote_address)
 
 UPLOAD_DIR = "app/static/uploads"
@@ -40,7 +39,6 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 def get_absolute_url(request: Request, relative_path: str) -> str:
     if not relative_path:
         return None
-    # assumes static files are mounted at /static
     base_url = str(request.base_url).rstrip("/")
     if relative_path.startswith("/"):
         return f"{base_url}{relative_path}"
@@ -88,13 +86,9 @@ async def get_weekly_stats(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
-    """
-    Returns calories for the last 7 days.
-    """
     today = date.today()
-    start_date = today - timedelta(days=6) # 7 days window
+    start_date = today - timedelta(days=6)
 
-    # Get all meals in range
     result = await db.execute(
         select(Meal)
         .where(
@@ -104,7 +98,6 @@ async def get_weekly_stats(
     )
     meals = result.scalars().all()
 
-    # Aggregate by date
     stats = { (start_date + timedelta(days=i)): 0 for i in range(7) }
 
     for meal in meals:
@@ -112,7 +105,6 @@ async def get_weekly_stats(
         if meal_date in stats:
             stats[meal_date] += meal.calories
 
-    # Convert to list
     response_data = [
         {"date": day, "total_calories": cal} 
         for day, cal in stats.items()
@@ -129,10 +121,6 @@ async def analyze_meal(
     file: UploadFile = File(...),
     current_user: User = Depends(deps.get_current_user)
 ):
-    """
-    Analyze image using OpenAI.
-    Returns structured data + absolute image URL.
-    """
     file_extension = file.filename.split(".")[-1]
     filename = f"{uuid.uuid4()}.{file_extension}"
     file_path = os.path.join(UPLOAD_DIR, filename)
@@ -140,46 +128,45 @@ async def analyze_meal(
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
-    # store relative path internally, return absolute to client
     relative_path = f"/static/uploads/{filename}"
     absolute_url = get_absolute_url(request, relative_path)
 
     try:
-        # analyze_food_image returns a dict
+        # calling ai service
+        # if this fails, we catch it below
         analysis_result = await analyze_food_image(file_path)
+        
+        if not analysis_result:
+             raise ValueError("ai returned empty result")
+
+        # check food flag
+        is_food = analysis_result.get("is_food", True)
+        if is_food is False:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            raise HTTPException(
+                status_code=400, 
+                detail="ai did not detect food"
+            )
+
+        return {
+            "name": analysis_result.get("name", "Unknown Food"),
+            "calories": analysis_result.get("calories", 0),
+            "protein": analysis_result.get("protein", 0),
+            "fats": analysis_result.get("fats", 0),
+            "carbs": analysis_result.get("carbs", 0),
+            "weight_grams": analysis_result.get("weight_grams", 0),
+            "is_food": True,
+            "image_url": absolute_url,
+            "confidence": 1.0
+        }
+
     except Exception as e:
+        # here we return the REAL error from openai
         if os.path.exists(file_path):
             os.remove(file_path)
-        print(f"AI Error: {e}")
-        raise HTTPException(status_code=500, detail="AI analysis failed")
-
-    if not analysis_result:
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        raise HTTPException(status_code=500, detail="AI returned empty result")
-
-    # check food flag
-    is_food = analysis_result.get("is_food", True)
-    if is_food is False:
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        raise HTTPException(
-            status_code=400, 
-            detail="AI did not detect food in this image."
-        )
-
-    # prepare response matching FoodAnalysisResponse schema
-    return {
-        "name": analysis_result.get("food_name", "Unknown Food"),
-        "calories": analysis_result.get("calories", 0),
-        "protein": analysis_result.get("protein", 0),
-        "fats": analysis_result.get("fats", 0),
-        "carbs": analysis_result.get("carbs", 0),
-        "weight_grams": analysis_result.get("weight_grams", 0),
-        "is_food": True,
-        "image_url": absolute_url, # return full url
-        "confidence": analysis_result.get("confidence", 1.0)
-    }
+        print(f"ai error: {e}")
+        raise HTTPException(status_code=500, detail=f"ai analysis failed: {str(e)}")
 
 
 @router.post("/", response_model=MealSchema)
@@ -194,7 +181,6 @@ async def create_meal(
     await db.commit()
     await db.refresh(db_meal)
     
-    # inject absolute url into response if image exists
     if db_meal.image_url:
         db_meal.image_url = get_absolute_url(request, db_meal.image_url)
         
@@ -210,25 +196,20 @@ async def read_meals(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ):
-    """Get history with pagination and metadata."""
     skip = (page - 1) * size
     
-    # build base query
     query = select(Meal).where(Meal.user_id == current_user.id)
     if filter_date:
         query = query.where(func.date(Meal.created_at) == filter_date)
     
-    # get total count for pagination metadata
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total_items = total_result.scalar_one()
 
-    # get data
     query = query.order_by(Meal.created_at.desc()).offset(skip).limit(size)
     result = await db.execute(query)
     meals = result.scalars().all()
     
-    # process urls
     for m in meals:
         if m.image_url:
             m.image_url = get_absolute_url(request, m.image_url)
@@ -281,10 +262,6 @@ async def delete_meal(
     
     if not meal:
         raise HTTPException(status_code=404, detail="Meal not found")
-    
-    # optional: delete file from disk if needed
-    # if meal.image_url:
-    #    ...
         
     await db.delete(meal)
     await db.commit()

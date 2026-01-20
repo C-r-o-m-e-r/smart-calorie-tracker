@@ -1,9 +1,8 @@
 # backend/app/main.py
-# Final configuration: Rate Limiting, Logging, Static Files
-
 import os
 import time
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -12,43 +11,52 @@ from slowapi.errors import RateLimitExceeded
 from app.core.config import settings
 from app.api.api import api_router
 
-# 1. Setup Rate Limiter (Identify users by IP address)
+# fix rate limit by ip addr 
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(title=settings.PROJECT_NAME)
 
-# 2. Connect Limiter to App
+# connect to app and handle too many reqs
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# 3. Setup Static Files
+# allow ios apps to talk to us
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# static files dir setup here
 os.makedirs("app/static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-# 4. Middleware: Logging & Performance Monitoring
+# log stuff and check time
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = time.time()
     
-    # Process the request
+    # run request
     response = await call_next(request)
     
-    # Calculate duration
+    # check speed
     process_time = time.time() - start_time
     
-    # Log to console (Green for success, Red/Yellow logic could be added)
-    print(f"📡 {request.method} {request.url.path} - Status: {response.status_code} - Took: {process_time:.4f}s")
+    # print to console for debug
+    print(f"📡 {request.method} {request.url.path} - status: {response.status_code} - took: {process_time:.4f}s")
     
     return response
 
-# Including routes
+# all routs are here
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-# 5. Health Check Endpoint (Standard for Docker/K8s)
+# standard ping for docker
 @app.get("/ping")
 async def health_check():
-    return {"status": "ok", "service": "Smart Calorie Tracker", "version": "1.0.0"}
+    return {"status": "ok", "service": "smart calorie tracker", "version": "1.0.0"}
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "message": "API is running. Go to /docs for Swagger."}
+    return {"status": "ok", "message": "api is running. go to /docs for swagger."}
