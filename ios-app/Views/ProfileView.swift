@@ -1,6 +1,20 @@
 import SwiftUI
 import SwiftData
 
+private enum ActivityLevel: String, CaseIterable, Identifiable {
+    case inactive = "Неактивный"
+    case active = "Активный"
+
+    var id: String { rawValue }
+
+    var multiplier: Double {
+        switch self {
+        case .inactive: return 1.2
+        case .active: return 1.55
+        }
+    }
+}
+
 struct ProfileView: View {
     @Environment(\.modelContext) private var context
     
@@ -10,11 +24,22 @@ struct ProfileView: View {
     // Временные состояния для полей ввода
     @State private var weight: String = ""
     @State private var height: String = ""
-    @State private var dailyGoal: String = ""
+    @State private var activityLevel: ActivityLevel = .inactive
     
     // Текущий профиль (первый из списка)
     var userProfile: UserProfile? {
         profiles.first
+    }
+
+    private var calculatedDailyCalories: Int {
+        let w = Double(weight) ?? 0.0
+        let h = Double(height) ?? 0.0
+
+        guard w > 0, h > 0 else { return 0 }
+
+        let base = 10 * w + 6.25 * h
+        let total = base * activityLevel.multiplier
+        return Int(total.rounded())
     }
 
     var body: some View {
@@ -37,14 +62,22 @@ struct ProfileView: View {
                             .multilineTextAlignment(.trailing)
                     }
                 }
+
+                Section(header: Text("Активность")) {
+                    Picker("Образ жизни", selection: $activityLevel) {
+                        ForEach(ActivityLevel.allCases) { level in
+                            Text(level.rawValue).tag(level)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
                 
                 Section(header: Text("Цели")) {
                     HStack {
                         Text("Дневная норма ккал")
                         Spacer()
-                        TextField("2000", text: $dailyGoal)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
+                        Text("\(calculatedDailyCalories)")
+                            .foregroundColor(.secondary)
                     }
                 }
                 
@@ -60,7 +93,7 @@ struct ProfileView: View {
                 if let profile = userProfile {
                     weight = String(profile.weight)
                     height = String(profile.height)
-                    dailyGoal = String(profile.dailyCalories)
+                    activityLevel = ActivityLevel(rawValue: profile.activityLevel) ?? .inactive
                 }
             }
         }
@@ -69,16 +102,18 @@ struct ProfileView: View {
     private func saveProfile() {
         let w = Double(weight) ?? 0.0
         let h = Double(height) ?? 0.0
-        let g = Int(dailyGoal) ?? 2000
+        let g = calculatedDailyCalories
+        let activity = activityLevel.rawValue
         
         if let profile = userProfile {
             // Обновляем существующий
             profile.weight = w
             profile.height = h
             profile.dailyCalories = g
+            profile.activityLevel = activity
         } else {
             // Создаем новый, если базы еще нет
-            let newProfile = UserProfile(weight: w, height: h, dailyCalories: g)
+            let newProfile = UserProfile(weight: w, height: h, dailyCalories: g, activityLevel: activity)
             context.insert(newProfile)
         }
         

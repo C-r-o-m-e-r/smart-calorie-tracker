@@ -6,11 +6,13 @@ final class UserProfile {
     var weight: Double
     var height: Double
     var dailyCalories: Int
+    var activityLevel: String
 
-    init(weight: Double, height: Double, dailyCalories: Int) {
+    init(weight: Double, height: Double, dailyCalories: Int, activityLevel: String) {
         self.weight = weight
         self.height = height
         self.dailyCalories = dailyCalories
+        self.activityLevel = activityLevel
     }
     
     // Вычисляем ИМТ: Вес / (Рост в метрах ^ 2)
