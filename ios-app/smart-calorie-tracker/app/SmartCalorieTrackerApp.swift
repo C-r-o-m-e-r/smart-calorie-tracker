@@ -3,12 +3,10 @@ import SwiftData
 
 @main
 struct SmartCalorieTrackerApp: App {
-    @StateObject private var authVM = AuthViewModel()
 
     var body: some Scene {
         WindowGroup {
-            AuthGateView()
-                .environmentObject(authVM)
+            RootTabView()
         }
         .modelContainer(for: [
             UserProfile.self,

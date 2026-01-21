@@ -54,3 +54,4 @@ Podfile.lock
 
 # --- Docker ---
 postgres_data/
+/backend/app/static/uploads

@@ -6,14 +6,12 @@ final class UserProfile {
     var weight: Double
     var height: Double
     var dailyCalories: Int
-    var gender: String = "Мужской"
     var activityLevel: String
 
-    init(weight: Double, height: Double, dailyCalories: Int, activityLevel: String, gender: String = "Мужской") {
+    init(weight: Double, height: Double, dailyCalories: Int, activityLevel: String) {
         self.weight = weight
         self.height = height
         self.dailyCalories = dailyCalories
-        self.gender = gender
         self.activityLevel = activityLevel
     }
     

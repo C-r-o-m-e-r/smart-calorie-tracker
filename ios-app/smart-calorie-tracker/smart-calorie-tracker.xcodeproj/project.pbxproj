@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3157410E2F20AF86002D6EFD /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3157410D2F20AF83002D6EFD /* AuthView.swift */; };
+		31774BD22F20C60600920D9F /* Meal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31774BD12F20C60600920D9F /* Meal.swift */; };
+		31A854DC2F1FF5AF00A8A06A /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A854DB2F1FF5A200A8A06A /* AppConfig.swift */; };
+		31A854DE2F1FF5DA00A8A06A /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A854DD2F1FF5D700A8A06A /* NetworkService.swift */; };
 		31E8A5812F080ED0002A2D12 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E8A5762F080ECF002A2D12 /* ChatViewModel.swift */; };
 		31E8A5822F080ED0002A2D12 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E8A5782F080ECF002A2D12 /* ProfileViewModel.swift */; };
 		31E8A5832F080ED0002A2D12 /* FoodEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E8A5712F080ECF002A2D12 /* FoodEntry.swift */; };
@@ -41,6 +45,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3157410D2F20AF83002D6EFD /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		31774BD12F20C60600920D9F /* Meal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meal.swift; sourceTree = "<group>"; };
+		31A854DB2F1FF5A200A8A06A /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		31A854DD2F1FF5D700A8A06A /* NetworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkService.swift; sourceTree = "<group>"; };
 		31E8A5442F0802C9002A2D12 /* smart-calorie-tracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "smart-calorie-tracker.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		31E8A5512F0802CC002A2D12 /* smart-calorie-trackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "smart-calorie-trackerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		31E8A55B2F0802CC002A2D12 /* smart-calorie-trackerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "smart-calorie-trackerUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -60,9 +68,22 @@
 		31E8A57F2F080ECF002A2D12 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		31A854DA2F1FF55000A8A06A /* Exceptions for "smart-calorie-tracker" folder in "smart-calorie-tracker" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 31E8A5432F0802C9002A2D12 /* smart-calorie-tracker */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		31E8A5462F0802C9002A2D12 /* smart-calorie-tracker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				31A854DA2F1FF55000A8A06A /* Exceptions for "smart-calorie-tracker" folder in "smart-calorie-tracker" target */,
+			);
 			path = "smart-calorie-tracker";
 			sourceTree = "<group>";
 		};
@@ -131,6 +152,7 @@
 		31E8A56F2F080ECF002A2D12 /* app */ = {
 			isa = PBXGroup;
 			children = (
+				31A854DB2F1FF5A200A8A06A /* AppConfig.swift */,
 				31E8A56E2F080ECF002A2D12 /* SmartCalorieTrackerApp.swift */,
 			);
 			path = app;
@@ -139,6 +161,7 @@
 		31E8A5732F080ECF002A2D12 /* models */ = {
 			isa = PBXGroup;
 			children = (
+				31774BD12F20C60600920D9F /* Meal.swift */,
 				31E8A5702F080ECF002A2D12 /* ChatMessage.swift */,
 				31E8A5712F080ECF002A2D12 /* FoodEntry.swift */,
 				31E8A5722F080ECF002A2D12 /* UserProfile.swift */,
@@ -149,6 +172,7 @@
 		31E8A5752F080ECF002A2D12 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				31A854DD2F1FF5D700A8A06A /* NetworkService.swift */,
 				31E8A5742F080ECF002A2D12 /* MockAPIService.swift */,
 			);
 			path = Services;
@@ -167,6 +191,7 @@
 		31E8A5802F080ECF002A2D12 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				3157410D2F20AF83002D6EFD /* AuthView.swift */,
 				31E8A57A2F080ECF002A2D12 /* AddMealView.swift */,
 				31E8A57B2F080ECF002A2D12 /* CalendarView.swift */,
 				31E8A57C2F080ECF002A2D12 /* ChatView.swift */,
@@ -325,14 +350,18 @@
 				31E8A5822F080ED0002A2D12 /* ProfileViewModel.swift in Sources */,
 				31E8A5832F080ED0002A2D12 /* FoodEntry.swift in Sources */,
 				31E8A5842F080ED0002A2D12 /* UserProfile.swift in Sources */,
+				31774BD22F20C60600920D9F /* Meal.swift in Sources */,
 				31E8A5852F080ED0002A2D12 /* DashboardView.swift in Sources */,
 				31E8A5862F080ED0002A2D12 /* AddMealView.swift in Sources */,
+				31A854DC2F1FF5AF00A8A06A /* AppConfig.swift in Sources */,
 				31E8A5872F080ED0002A2D12 /* SmartCalorieTrackerApp.swift in Sources */,
 				31E8A5882F080ED0002A2D12 /* MockAPIService.swift in Sources */,
 				31E8A5892F080ED0002A2D12 /* ProfileView.swift in Sources */,
+				31A854DE2F1FF5DA00A8A06A /* NetworkService.swift in Sources */,
 				31E8A58A2F080ED0002A2D12 /* CalendarView.swift in Sources */,
 				31E8A58B2F080ED0002A2D12 /* ChatMessage.swift in Sources */,
 				31E8A58C2F080ED0002A2D12 /* DashboardViewModel.swift in Sources */,
+				3157410E2F20AF86002D6EFD /* AuthView.swift in Sources */,
 				31E8A58D2F080ED0002A2D12 /* ChatView.swift in Sources */,
 				31E8A58E2F080ED0002A2D12 /* RootTabView.swift in Sources */,
 			);
@@ -498,8 +527,10 @@
 				DEVELOPMENT_TEAM = XYUU5R7HYK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "SmartPlate";
+				INFOPLIST_FILE = "smart-calorie-tracker/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = SmartPlate;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need a camera to analyze food";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -535,8 +566,10 @@
 				DEVELOPMENT_TEAM = XYUU5R7HYK;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "SmartPlate";
+				INFOPLIST_FILE = "smart-calorie-tracker/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = SmartPlate;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.food-and-drink";
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need a camera to analyze food";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

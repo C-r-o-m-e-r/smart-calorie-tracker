@@ -2,13 +2,13 @@ import Foundation
 import SwiftData
 
 @Model
-final class ChatMessage {
+final class ChatMessage: Identifiable {
     var id: UUID
     var text: String
     var isUser: Bool
     var date: Date
-
-    init(text: String, isUser: Bool, date: Date = .now) {
+    
+    init(text: String, isUser: Bool, date: Date = Date()) {
         self.id = UUID()
         self.text = text
         self.isUser = isUser

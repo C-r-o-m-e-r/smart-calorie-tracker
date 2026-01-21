@@ -2,92 +2,129 @@ import SwiftUI
 import SwiftData
 
 struct ChatView: View {
+    @StateObject private var viewModel = ChatViewModel()
     @Environment(\.modelContext) private var context
-    // Автоматически подтягиваем сообщения из SwiftData
+    
+    // Читаємо повідомлення з бази даних, сортуємо за часом (найстаріші зверху)
     @Query(sort: \ChatMessage.date, order: .forward) private var allMessages: [ChatMessage]
     
-    @State private var viewModel = ChatViewModel()
-    @State private var inputText: String = ""
-
-    init() {}
-
     var body: some View {
         NavigationStack {
-            VStack {
+            VStack(spacing: 0) {
+                
+                // --- СПИСОК ПОВІДОМЛЕНЬ ---
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(spacing: 12) {
-                            ForEach(allMessages) { message in
-                                ChatBubble(message: message)
+                            // Якщо повідомлень немає - показуємо привітання
+                            if allMessages.isEmpty {
+                                VStack(spacing: 20) {
+                                    Image(systemName: "bubble.left.and.bubble.right.fill")
+                                        .font(.system(size: 60))
+                                        .foregroundColor(.gray.opacity(0.3))
+                                    Text("Chat History is Empty.\nSay Hello!")
+                                        .multilineTextAlignment(.center)
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.top, 50)
+                            }
+                            
+                            // Виводимо всі повідомлення
+                            ForEach(allMessages) { msg in
+                                ChatBubble(message: msg)
+                                    .id(msg.id) // ID для автоскролу
+                            }
+                            
+                            // Індикатор, коли AI думає
+                            if viewModel.isLoading {
+                                HStack {
+                                    ProgressView()
+                                        .padding(.trailing, 5)
+                                    Text("AI is typing...")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                    Spacer()
+                                }
+                                .padding(.leading)
+                                .id("loader")
                             }
                         }
                         .padding()
                     }
+                    // Автоскрол вниз при новому повідомленні
                     .onChange(of: allMessages.count) {
-                        // Автопрокрутка вниз при новом сообщении
-                        withAnimation {
-                            proxy.scrollTo(allMessages.last?.id, anchor: .bottom)
+                        if let lastId = allMessages.last?.id {
+                            withAnimation {
+                                proxy.scrollTo(lastId, anchor: .bottom)
+                            }
+                        }
+                    }
+                    // Автоскрол при появі лоадера
+                    .onChange(of: viewModel.isLoading) {
+                        if viewModel.isLoading {
+                            withAnimation {
+                                proxy.scrollTo("loader", anchor: .bottom)
+                            }
                         }
                     }
                 }
-
-                // Панель ввода
-                HStack(spacing: 12) {
-                    TextField("Напишите сообщение...", text: $inputText)
-                        .padding(10)
-                        .background(Color.secondary.opacity(0.1))
-                        .cornerRadius(10)
+                
+                // --- ПОЛЕ ВВОДУ ---
+                HStack(spacing: 10) {
+                    TextField("Type your message...", text: $viewModel.inputText)
+                        .padding(12)
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(20)
+                        .disabled(viewModel.isLoading)
+                        .submitLabel(.send)
+                        .onSubmit {
+                            if !viewModel.inputText.isEmpty {
+                                viewModel.sendMessage(context: context)
+                            }
+                        }
                     
+                    // Кнопка відправки
                     Button {
-                        sendMessage()
+                        viewModel.sendMessage(context: context)
                     } label: {
-                        Image(systemName: "paperplane.fill")
-                            .foregroundColor(.white)
-                            .padding(10)
-                            .background(Color.blue)
-                            .clipShape(Circle())
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundColor(viewModel.inputText.isEmpty || viewModel.isLoading ? .gray : .blue)
                     }
-                    .disabled(inputText.isEmpty)
+                    .disabled(viewModel.inputText.isEmpty || viewModel.isLoading)
                 }
                 .padding()
+                .background(Color(.systemBackground))
+                .shadow(color: .black.opacity(0.05), radius: 5, y: -5)
             }
-            .navigationTitle("AI Помощник")
-        }
-    }
-
-    private func sendMessage() {
-        let text = inputText
-        inputText = ""
-        
-        // 1. Сохраняем сообщение пользователя
-        let userMsg = ChatMessage(text: text, isUser: true)
-        context.insert(userMsg)
-        
-        // 2. Имитируем задержку ответа бота
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            let aiText = viewModel.generateAIResponse(for: text)
-            let aiMsg = ChatMessage(text: aiText, isUser: false)
-            context.insert(aiMsg)
+            .navigationTitle("AI Chat")
+            .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                // Передаємо базу даних у ViewModel при запуску
+                viewModel.setContext(context)
+            }
         }
     }
 }
 
-// Вспомогательный View для "пузырька" сообщения
+// --- ДИЗАЙН ПОВІДОМЛЕННЯ ---
 struct ChatBubble: View {
     let message: ChatMessage
     
     var body: some View {
         HStack {
+            // Якщо повідомлення від юзера - зсуваємо вправо
             if message.isUser { Spacer() }
             
             Text(message.text)
                 .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(message.isUser ? Color.blue : Color(.systemGray5))
+                .padding(.vertical, 12)
+                .background(message.isUser ? Color.blue : Color(.secondarySystemBackground))
                 .foregroundColor(message.isUser ? .white : .primary)
-                .cornerRadius(20)
-                .shadow(radius: 1)
+                .cornerRadius(18)
+                .frame(maxWidth: 280, alignment: message.isUser ? .trailing : .leading)
             
+            // Якщо повідомлення від AI - зсуваємо вліво
             if !message.isUser { Spacer() }
         }
     }

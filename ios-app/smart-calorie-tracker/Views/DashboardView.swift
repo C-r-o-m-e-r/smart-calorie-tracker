@@ -2,9 +2,9 @@ import SwiftUI
 import SwiftData
 
 struct DashboardView: View {
-    // Доступ к профилю для получения цели калорий
+    // Profile access to get the calorie goal
     @Query private var profiles: [UserProfile]
-    // Доступ ко всем записям еды
+    // Access to all food entries
     @Query(sort: \FoodEntry.date, order: .reverse) private var allEntries: [FoodEntry]
     
     @Environment(\.modelContext) private var context
@@ -13,39 +13,39 @@ struct DashboardView: View {
     
     init() {}
     
-    // Вычисляем цель (из профиля или 2000 по умолчанию)
+    // Calculate goal (from profile or 2000 by default)
     private var dailyGoal: Int {
         profiles.first?.dailyCalories ?? 2000
     }
     
-    // Записи только за сегодня
+    // Records for today only
     private var todayEntries: [FoodEntry] {
         allEntries.filter { Calendar.current.isDateInToday($0.date) }
     }
     
-    // Сумма за сегодня
+    // Total for today
     private var totalCalories: Int {
         todayEntries.reduce(0) { $0 + $1.calories }
     }
     
-    // Сколько осталось
+    // How much is left
     private var remainingCalories: Int {
         dailyGoal - totalCalories
     }
 
     private func deleteEntry(_ entry: FoodEntry) {
         context.delete(entry)
-        // Изменения сохранятся автоматически благодаря SwiftData
+        // Changes will be saved automatically thanks to SwiftData
     }
 
     var body: some View {
         NavigationStack {
-            ScrollView { // Используем ScrollView для гибкости интерфейса
+            ScrollView { // Using ScrollView for interface flexibility
                 VStack(alignment: .leading, spacing: 24) {
                    
-                    // Блок со статистикой
+                    // Statistics block
                     VStack(spacing: 8) {
-                        Text("Осталось")
+                        Text("Remaining")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                       
@@ -53,7 +53,7 @@ struct DashboardView: View {
                             .font(.system(size: 60, weight: .bold, design: .rounded))
                             .foregroundColor(remainingCalories >= 0 ? .primary : .red)
                       
-                        Text("из \(dailyGoal) ккал")
+                        Text("of \(dailyGoal) kcal")
                             .font(.caption)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 4)
@@ -64,13 +64,13 @@ struct DashboardView: View {
                     .padding(.vertical, 20)
                     .background(RoundedRectangle(cornerRadius: 20).fill(Color(.systemBackground)).shadow(radius: 2))
 
-                    // Заголовок списка
-                    Text("Сегодняшние приемы пищи")
+                    // List header
+                    Text("Today's Meals")
                         .font(.title2)
                         .bold()
                    
                     if todayEntries.isEmpty {
-                        ContentUnavailableView("Нет записей", systemImage: "fork.knife", description: Text("Добавьте ваш первый прием пищи сегодня"))
+                        ContentUnavailableView("No entries", systemImage: "fork.knife", description: Text("Add your first meal today"))
                     } else {
                         ForEach(todayEntries) { entry in
                             HStack {
@@ -82,7 +82,7 @@ struct DashboardView: View {
                                         .foregroundColor(.secondary)
                                 }
                                 Spacer()
-                                Text("\(entry.calories) ккал")
+                                Text("\(entry.calories) kcal")
                                     .fontWeight(.semibold)
                             }
                             .padding()
@@ -92,7 +92,7 @@ struct DashboardView: View {
                                 Button(role: .destructive) {
                                     deleteEntry(entry)
                                 } label: {
-                                    Label("Удалить", systemImage: "trash")
+                                    Label("Delete", systemImage: "trash")
                                 }
                             }
                         }
@@ -100,12 +100,12 @@ struct DashboardView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Трекер")
-            .safeAreaInset(edge: .bottom) { // Кнопка прилипает к низу
+            .navigationTitle("Tracker")
+            .safeAreaInset(edge: .bottom) { // Button sticks to the bottom
                 Button {
                     showAddMeal = true
                 } label: {
-                    Label("Добавить еду", systemImage: "plus")
+                    Label("Add Meal", systemImage: "plus")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
