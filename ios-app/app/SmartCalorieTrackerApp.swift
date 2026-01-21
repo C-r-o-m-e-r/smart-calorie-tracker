@@ -3,10 +3,12 @@ import SwiftData
 
 @main
 struct SmartPlateApp: App {
+    @StateObject private var authVM = AuthViewModel()
 
     var body: some Scene {
         WindowGroup {
-            RootTabView()
+            AuthGateView()
+                .environmentObject(authVM)
         }
         .modelContainer(for: [
             UserProfile.self,
